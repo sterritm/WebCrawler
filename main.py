@@ -14,7 +14,7 @@ from Parse import Sublink, WebPage
 class MainHandler(webapp2.RequestHandler):
     def get(self):
         keywordList = ['Dinosaurs', 'French Fries']
-        url = Sublink("http://cs467-pavo-tests.appspot.com/graph3/a", keywordList)
+        url = Sublink("http://cs467-pavo-tests.appspot.com/", keywordList)
         print("Hello ")
         newPage = WebPage(url)
         #returned = newPage.FindAllURLs()
