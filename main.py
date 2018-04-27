@@ -1,4 +1,4 @@
-'''from google.appengine.ext.webapp import template
+from google.appengine.ext.webapp import template
 from google.appengine.api import urlfetch
 import webapp2
 import json
@@ -13,12 +13,15 @@ from Parse import Sublink, WebPage
 # Start page
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        url = Sublink("https://stackoverflow.com/questions/15081542/python-creating-objects")
+        keywordList = ['Dinosaurs', 'French Fries']
+        url = Sublink("http://cs467-pavo-tests.appspot.com/graph3/a", keywordList)
         print("Hello ")
         newPage = WebPage(url)
-        returned = newPage.CollectSublinks()
+        #returned = newPage.FindAllURLs()
+        returned = newPage.GoSearch(url, 'BFS', 1)
         for i in returned:
-            print(i)
+            print (i)
+
 
 
 app = webapp2.WSGIApplication([('/', MainHandler),
@@ -26,8 +29,9 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                               debug=True)
 '''
 from Parse import Sublink, WebPage
-url = Sublink("https://stackoverflow.com/questions/15081542/python-creating-objects")
+url = Sublink("https://cloudcsproject.appspot.com/welcome")
 newPage = WebPage(url)
-returned = newPage.FindAllURLs()
+#returned = newPage.FindAllURLs()
+returned = newPage.GoSearch(url, 'BFS', 2)
 for i in returned:
-    print(i)
+    print(i)'''
