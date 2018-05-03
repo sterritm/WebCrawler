@@ -9,6 +9,7 @@ from lxml import html
 import urlparse
 from lxml.html.clean import Cleaner
 
+'''
 from google.appengine.ext import ndb
 from google.appengine.ext.webapp import template
 from google.appengine.api import urlfetch
@@ -18,15 +19,15 @@ import os
 import urllib
 import random
 import string
-from random import randint
+from random import randint'''
 
-
+'''
 class Entry(ndb.Model):
     Id = ndb.StringProperty()
     URL = ndb.StringProperty()
     Position = ndb.FloatProperty
     ParentID = ndb.JsonProperty
-    Keyword = ndb.StringProperty()
+    Keyword = ndb.StringProperty()'''
 
 
 # The web page object- any page available on the world wide web,
@@ -59,13 +60,16 @@ class WebPage(object):
         self.Code = response.status_code
 
         # Get the links for the children
-        self.child_links = self.FindAllURLs()
+        self.children = self.FindAllURLs()
 
     # Find all of the URLs connected to that site
     def FindAllURLs(self):
         returned = html.fromstring(self.Tags)
-        WebSite = set([urlparse.urldefrag(url)[0] for url in returned.xpath('//a[@href]/@href')])
+        WebSite = set([urlparse.urldefrag(each)[0] for each in returned.xpath('//a[@href]/@href')])
         return [Sublink(url, self.link) for url in WebSite]
+
+    def FindAllURLs2(self):
+        return [WebPage for WebPage in self.children]
 
     def GoSearch(self, SublinkObject, DFSorBFS, NumLevels, keywords=None):
 
@@ -82,54 +86,62 @@ class WebPage(object):
 
             # the top of the queue can be popped if it is a depth first search
             # the bottom of the queue (as in a stack) can be popped if it is breadth first search
-            if "DFS" == DFSorBFS: sublink = priorityQueue.pop()
-            if DFSorBFS == "BFS": sublink = priorityQueue.pop(0)
-            if DFSorBFS != 'DFS' and DFSorBFS != 'BFS': return Exception("BFS or DFS not chosen correctly. ")
+            if "DFS" == DFSorBFS:
+                sublink = priorityQueue.pop()
+            if DFSorBFS == "BFS":
+                sublink = priorityQueue.pop(0)
+            if DFSorBFS != 'DFS' and DFSorBFS != 'BFS':
+                return Exception("BFS or DFS not chosen correctly. ")
+
 
             if sublink not in InQueue and sublink.legal:
                 # this link has not been seen before
                 if not (hashlib.md5(sublink.URL.encode('utf-8')).hexdigest() in Hasher):
                     # add the sublink to the queue
                     InQueue.add(sublink)
-                    Hasher = {hashlib.md5(sublink.URL.encode('utf-8')).hexdigest() : hashlib.md5(sublink.URL.encode('utf-8')).hexdigest()}
+                    Hasher = {hashlib.md5(sublink.URL.encode('utf-8')).hexdigest(): hashlib.md5(
+                        sublink.URL.encode('utf-8')).hexdigest()}
 
-        # parse sublink's page and get their children urls
-        page = WebPage(sublink)
-        if sublink.position < NumLevels and page.Code == 200:
-            priorityQueue.extend(page.FindAllURLs())
 
-        # check if the current page has one of the given stop words
-        for word in keywords:
-            keywordFound = keywordFound or word in self.Text
 
-    # self.db.commit()
+                # parse sublink's page and get their children urls
+                SublinkChildren = WebPage(sublink)
+                if sublink.position < NumLevels and SublinkChildren.Code == 200:
+                    for each in SublinkChildren.FindAllURLs2():
+                        each.position = sublink.position + 1
+                        priorityQueue.append(each)
+
+                # check if the current page has one of the given stop words
+                for word in keywords:
+                    keywordFound = keywordFound or word in self.Text
+
         return InQueue
 
 
 # Class to represent all sublinks
 class Sublink(object):
 
-    def __init__(self, url, keywords=None, parent=None):
+    def __init__(self, address, keywords=None, ancestor=None):
 
         # If the parent is not a valid WebPage, say so
-        if parent:
-            if not isinstance(parent, Sublink):
+        if ancestor:
+            if not isinstance(ancestor, Sublink):
                 raise Exception("Invalid WebPage Object. ")
             # returns the full URL
-            url = urlparse.urljoin(parent.URL, url)
+            address = urlparse.urljoin(ancestor.URL, address)
 
         # Set the sublink's contents
-        self.ancestor = parent
+        self.ancestor = ancestor
 
         # defragment the URL
-        self.URL = urlparse.urldefrag(url)[0]
+        self.URL = urlparse.urldefrag(address)[0]
 
         # parse the URL
-        self.authority = urlparse.urlparse(url).netloc
+        self.authority = urlparse.urlparse(address).netloc
 
         # validate the URL
         try:
-            result = urlparse.urlparse(url)
+            result = urlparse.urlparse(address)
             self.legal = all([result.scheme, result.netloc])
         except:
             self.legal = False
@@ -139,18 +151,20 @@ class Sublink(object):
         encoded.encode('utf-8')
 
         # use md5 to return a hash for the given url
-        self.id = hashlib.md5(url.encode('utf-8')).hexdigest()
-        self.position = 0 if parent is None else parent.position + 1
+        self.id = hashlib.md5(address.encode('utf-8')).hexdigest()
+
+        #set position in regards to the number of ancestors above it
+        self.position = 0 if ancestor is None else ancestor.position + 1
 
         # Create a new Entry for only the inputed link
-        if self.position == 0:
+        '''if self.position == 0:
             newEntry = Entry()
             newEntry.Id = self.id
             newEntry.URL = self.URL
             newEntry.Position = self.position
             newEntry.ParentID = self.ancestor
             newEntry.Keyword = str(keywords).strip('[]')
-            newEntry.put()
+            newEntry.put()'''
 
     # have str return the url, the domain, whether the url was valid, and the level (child, grandchild, etc.)
     def __str__(self):
