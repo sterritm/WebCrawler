@@ -81,6 +81,9 @@ class WebPage(object):
         if keywords is None:
             keywords = []
 
+        if DFSorBFS != 'DFS' and DFSorBFS != 'BFS':
+            return Exception("BFS or DFS not chosen correctly. ")
+
         # while there are still sublinks in the priority queue and the keyword has not been found
         while priorityQueue and not keywordFound:
 
@@ -90,9 +93,6 @@ class WebPage(object):
                 sublink = priorityQueue.pop()
             if DFSorBFS == "BFS":
                 sublink = priorityQueue.pop(0)
-            if DFSorBFS != 'DFS' and DFSorBFS != 'BFS':
-                return Exception("BFS or DFS not chosen correctly. ")
-
 
             if sublink not in InQueue and sublink.legal:
                 # this link has not been seen before
@@ -101,8 +101,6 @@ class WebPage(object):
                     InQueue.add(sublink)
                     Hasher = {hashlib.md5(sublink.URL.encode('utf-8')).hexdigest(): hashlib.md5(
                         sublink.URL.encode('utf-8')).hexdigest()}
-
-
 
                 # parse sublink's page and get their children urls
                 SublinkChildren = WebPage(sublink)
