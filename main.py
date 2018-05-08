@@ -1,3 +1,26 @@
+from google.appengine.ext.webapp import template
+from google.appengine.api import urlfetch
+import webapp2
+import json
+
+# Start page
+class MainHandler(webapp2.RequestHandler):
+    def get(self):
+        url = Sublink("http://cs467-pavo-tests.appspot.com/parse6")
+        newPage = WebPage(url)
+        arrayKeyword = {'haveh', 'also'}
+        returned = newPage.GoSearch(url, 'DFS', 2, arrayKeyword)
+        print ('\n\n\n\n')
+        for i in returned:
+            print(i)
+        print ('\n\n\n\n')
+
+app = webapp2.WSGIApplication([('/', MainHandler),
+                            ('/index.html', MainHandler)],
+                            debug = True)
+
+
+
 from Parse import Sublink, WebPage
 #url = Sublink("http://cs467-pavo-tests.appspot.com/parse1")
 #url = Sublink("http://cs467-pavo-tests.appspot.com/parse2")
@@ -18,6 +41,7 @@ url = Sublink("http://cs467-pavo-tests.appspot.com/parse6")
 #url = Sublink("http://cs467-pavo-tests.appspot.com/graph7")
 #url = Sublink("http://cs467-pavo-tests.appspot.com/graph8/a")
 newPage = WebPage(url)
-returned = newPage.GoSearch(url, 'DFS', 2, 'wljlcome')
+arrayKeyword = {'have', 'Also'}
+returned = newPage.GoSearch(url, 'DFS', 2, arrayKeyword)
 for i in returned:
     print(i)
