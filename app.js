@@ -14,13 +14,11 @@ const express = require("express");
 const app = express();
 const handlebars = require("express-handlebars").create({ defaultLayout: "main" });
 const bodyParser = require("body-parser");
-
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static("public"));	//for serving static files
 app.use(bodyParser.json());
-
 
 app.engine("handlebars", handlebars.engine);
 app.set("view engine", "handlebars");
@@ -28,8 +26,7 @@ app.set("port", 8080);
 
 app.get("/", function (req, res) {
 	res.render("index");
-    //res.send("hello world");
-	
+	//res.send("hello world");
 });
 
 //page converts data sent here to json server to send to server web crawler is located on
@@ -60,6 +57,9 @@ app.post("/crawl_web", function (req, res) {
     //res.redirect('/results');   //need to send post data as well, other option is to have this code in same page as graph code (preferred)
 });
 
+app.get("/force", function (req, res) {
+	res.render("force");
+});
 
 app.get("/results", function (req, res) {
 	res.render("results");
@@ -67,6 +67,10 @@ app.get("/results", function (req, res) {
 
 app.get("/practice", function (req, res) {
 	res.render("practice");
+});
+
+app.get("/llprac", function (req, res) {
+	res.render("llprac");
 });
 
 app.use(function (req, res) {
@@ -91,4 +95,3 @@ app.listen(app.get("port"), function () {
 //	const port = server.address().port;
 
 //	console.log(`Example app listening at http://${host}:${port}`);
-//});
