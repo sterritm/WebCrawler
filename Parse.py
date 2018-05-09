@@ -72,6 +72,10 @@ class WebPage(object):
     def ReturnAllChildWebPages(self):
         return [WebPage for WebPage in self.children]
 
+    # helper function to return links of children of a webpage
+    def ReturnAllChildrenLinks(self):
+        return [page.getUrl() for page in self.children]
+
     # Source: https://stackoverflow.com/questions/5319922/python-check-if-word-is-in-a-string
     # find the keyword, ignores the case. So if the keyword is 'also' and the word
     # 'Also' is found in the text, the search will stop.
@@ -87,6 +91,7 @@ class WebPage(object):
         priorityQueue = [SublinkObject]
         InQueue = set()
         keywordFound = False
+        graph = {}
 
         if keywords is None:
             keywords = []
@@ -109,9 +114,17 @@ class WebPage(object):
                 # add the sublink to the queue
                 InQueue.add(sublink)
 
-                # parse sublink's page and get their children urls
+            # parse sublink's page and get their children urls
             SublinkChildren = WebPage(sublink)
             if sublink.position < NumLevels and SublinkChildren.Code == 200:
+                # create a node to add to graph
+                node = {}
+                node['title'] = sublink.getTitle()
+                node['found'] = False   #temporary placeholder till words are implemented
+                node['edges'] = SublinkChildren.ReturnAllChildrenLinks()
+                # add node to the graph
+                graph[sublink.getUrl()] = node
+                # continue crawling children
                 for each in SublinkChildren.ReturnAllChildWebPages():
                     each.position = sublink.position + 1
                     priorityQueue.append(each)
@@ -120,7 +133,7 @@ class WebPage(object):
             for word in keywords:
                 keywordFound = keywordFound or self.findWholeWord(word)(self.Text)
 
-        return InQueue
+        return graph
 
 
 
@@ -173,6 +186,13 @@ class Sublink(object):
             newEntry.Keyword = str(keywords).strip('[]')
             newEntry.put()
 
+    # returns url for page
+    def getUrl(self):
+        return self.URL
+    
+    # returns title for page, temporary placeholder of empty string
+    def getTitle(self):
+        return 'title' 
     # print the sublink - this is the returned object.
     def __str__(self):
         return "ancestors:%s . legal:%s . id:%s . url: %s " \

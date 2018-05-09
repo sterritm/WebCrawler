@@ -3,7 +3,7 @@ from google.appengine.api import urlfetch
 import webapp2
 import json
 
-# Start page
+## Start page
 class MainHandler(webapp2.RequestHandler):
     def get(self):
         url = Sublink("http://cs467-pavo-tests.appspot.com/parse6")
@@ -27,7 +27,7 @@ from Parse import Sublink, WebPage
 #url = Sublink("http://cs467-pavo-tests.appspot.com/parse3")
 #url = Sublink("http://cs467-pavo-tests.appspot.com/parse4")
 #url = Sublink("http://cs467-pavo-tests.appspot.com/parse5")
-url = Sublink("http://cs467-pavo-tests.appspot.com/parse6")
+#url = Sublink("http://cs467-pavo-tests.appspot.com/parse6")
 #url = Sublink("http://cs467-pavo-tests.appspot.com/parse7")
 #url = Sublink("http://cs467-pavo-tests.appspot.com/parse8")
 #url = Sublink("http://cs467-pavo-tests.appspot.com/parse9")
@@ -36,12 +36,14 @@ url = Sublink("http://cs467-pavo-tests.appspot.com/parse6")
 #url = Sublink("http://cs467-pavo-tests.appspot.com/graph2")
 #url = Sublink("http://cs467-pavo-tests.appspot.com/graph3")
 #url = Sublink("http://cs467-pavo-tests.appspot.com/graph4")
-#url = Sublink("http://cs467-pavo-tests.appspot.com/graph5")
+url = Sublink("http://cs467-pavo-tests.appspot.com/graph5")
 #url = Sublink("http://cs467-pavo-tests.appspot.com/graph6/a")
 #url = Sublink("http://cs467-pavo-tests.appspot.com/graph7")
 #url = Sublink("http://cs467-pavo-tests.appspot.com/graph8/a")
 newPage = WebPage(url)
-arrayKeyword = {'have', 'Also'}
-returned = newPage.GoSearch(url, 'DFS', 2, arrayKeyword)
-for i in returned:
-    print(i)
+urls = newPage.GoSearch(url, 'BFS', 3)
+dict = {}
+dict['URLs'] = urls
+dict['start'] = url.getUrl()
+dict['cookie'] = 'temp'
+print json.dumps(dict, indent=4, sort_keys=True)
