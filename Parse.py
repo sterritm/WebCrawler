@@ -9,7 +9,7 @@ from lxml import html
 import urlparse
 from lxml.html.clean import Cleaner
 
-'''
+
 from google.appengine.ext import ndb
 from google.appengine.ext.webapp import template
 from google.appengine.api import urlfetch
@@ -19,15 +19,15 @@ import os
 import urllib
 import random
 import string
-from random import randint'''
+from random import randint
 
-'''
+
 class Entry(ndb.Model):
     Id = ndb.StringProperty()
     URL = ndb.StringProperty()
     Position = ndb.FloatProperty
     ParentID = ndb.JsonProperty
-    Keyword = ndb.StringProperty()'''
+    Keyword = ndb.StringProperty()
 
 
 # The web page object- any page available on the world wide web,
@@ -61,13 +61,6 @@ class WebPage(object):
 
         # Get the links for the children
         self.children = self.FindAllURLs()
-        
-    #Returns array of all links in page
-    def getChildren(self):
-        kids = []
-        for child in self.children:
-            kids.append(child.getUrl())
-        return kids
 
     # Find all of the URLs connected to that site
     def FindAllURLs(self):
@@ -75,15 +68,29 @@ class WebPage(object):
         WebSite = set([urlparse.urldefrag(each)[0] for each in returned.xpath('//a[@href]/@href')])
         return [Sublink(url, self.link) for url in WebSite]
 
-    def FindAllURLs2(self):
+    # helper function to return all the children of a webpage
+    def ReturnAllChildWebPages(self):
         return [WebPage for WebPage in self.children]
 
+    # helper function to return links of children of a webpage
+    def ReturnAllChildrenLinks(self):
+        return [page.getUrl() for page in self.children]
+
+    # Source: https://stackoverflow.com/questions/5319922/python-check-if-word-is-in-a-string
+    # find the keyword, ignores the case. So if the keyword is 'also' and the word
+    # 'Also' is found in the text, the search will stop.
+    def findWholeWord(self, w):
+        return re.compile(r'\b({0})\b'.format(w), flags=re.IGNORECASE).search
+
+    # This is the depth and breadth first search. It uses a priority queue
+    # to keep track of which urls to search further on. It is constrained
+    # by the keywords and the depth of the search (how many ancestors the
+    # webpage  is allowed to have.
     def GoSearch(self, SublinkObject, DFSorBFS, NumLevels, keywords=None):
 
         priorityQueue = [SublinkObject]
         InQueue = set()
         keywordFound = False
-        Hasher = {}
         graph = {}
 
         if keywords is None:
@@ -102,31 +109,33 @@ class WebPage(object):
             if DFSorBFS == "BFS":
                 sublink = priorityQueue.pop(0)
 
+            # this link has not been seen before
             if sublink not in InQueue and sublink.legal:
-                # this link has not been seen before
-                if not (hashlib.md5(sublink.URL.encode('utf-8')).hexdigest() in Hasher):
-                    # add the sublink to the queue
-                    InQueue.add(sublink)
-                    Hasher = {hashlib.md5(sublink.URL.encode('utf-8')).hexdigest(): hashlib.md5(
-                        sublink.URL.encode('utf-8')).hexdigest()}
+                # add the sublink to the queue
+                InQueue.add(sublink)
 
-                # parse sublink's page and get their children urls
-                SublinkChildren = WebPage(sublink)
+            # parse sublink's page and get their children urls
+            SublinkChildren = WebPage(sublink)
+            if sublink.position < NumLevels and SublinkChildren.Code == 200:
+                # create a node to add to graph
                 node = {}
                 node['title'] = sublink.getTitle()
                 node['found'] = False   #temporary placeholder till words are implemented
-                node['edges'] = SublinkChildren.getChildren()
+                node['edges'] = SublinkChildren.ReturnAllChildrenLinks()
+                # add node to the graph
                 graph[sublink.getUrl()] = node
-                if sublink.position < NumLevels and SublinkChildren.Code == 200:
-                    for each in SublinkChildren.FindAllURLs2():
-                        each.position = sublink.position + 1
-                        priorityQueue.append(each)
+                # continue crawling children
+                for each in SublinkChildren.ReturnAllChildWebPages():
+                    each.position = sublink.position + 1
+                    priorityQueue.append(each)
 
-                # check if the current page has one of the given stop words
-                for word in keywords:
-                    keywordFound = keywordFound or word in self.Text
+            # check if the current page has one of the given stop words
+            for word in keywords:
+                keywordFound = keywordFound or self.findWholeWord(word)(self.Text)
 
         return graph
+
+
 
 
 # Class to represent all sublinks
@@ -164,18 +173,18 @@ class Sublink(object):
         # use md5 to return a hash for the given url
         self.id = hashlib.md5(address.encode('utf-8')).hexdigest()
 
-        #set position in regards to the number of ancestors above it
+        # set position in regards to the number of ancestors above it
         self.position = 0 if ancestor is None else ancestor.position + 1
 
         # Create a new Entry for only the inputed link
-        '''if self.position == 0:
+        if self.position == 0:
             newEntry = Entry()
             newEntry.Id = self.id
             newEntry.URL = self.URL
             newEntry.Position = self.position
             newEntry.ParentID = self.ancestor
             newEntry.Keyword = str(keywords).strip('[]')
-            newEntry.put()'''
+            newEntry.put()
 
     # returns url for page
     def getUrl(self):
@@ -183,12 +192,11 @@ class Sublink(object):
     
     # returns title for page, temporary placeholder of empty string
     def getTitle(self):
-        return 'title'   
-
-    # have str return the url, the domain, whether the url was valid, and the level (child, grandchild, etc.)
+        return 'title' 
+    # print the sublink - this is the returned object.
     def __str__(self):
-        return "ancestors:%s . legal:%s . id:%s . url: %s . authority:%s " \
-               % (self.position, self.legal, self.id, self.URL, self.authority)
+        return "ancestors:%s . legal:%s . id:%s . url: %s " \
+               % (self.position, self.legal, self.id, self.URL)
 
 
 # Source: https://stackoverflow.com/questions/3073881/clean-up-html-in-python/6482979
