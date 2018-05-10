@@ -116,18 +116,21 @@ class WebPage(object):
 
             # parse sublink's page and get their children urls
             SublinkChildren = WebPage(sublink)
-            if sublink.position < NumLevels and SublinkChildren.Code == 200:
+            if sublink.position <= NumLevels and SublinkChildren.Code == 200:
                 # create a node to add to graph
                 node = {}
                 node['title'] = sublink.getTitle()
                 node['found'] = False   #temporary placeholder till words are implemented
-                node['edges'] = SublinkChildren.ReturnAllChildrenLinks()
+                if sublink.position == NumLevels:
+                    node['edges'] = []
+                else:
+                    node['edges'] = SublinkChildren.ReturnAllChildrenLinks()
+                    # continue crawling children
+                    for each in SublinkChildren.ReturnAllChildWebPages():
+                        each.position = sublink.position + 1
+                        priorityQueue.append(each)
                 # add node to the graph
                 graph[sublink.getUrl()] = node
-                # continue crawling children
-                for each in SublinkChildren.ReturnAllChildWebPages():
-                    each.position = sublink.position + 1
-                    priorityQueue.append(each)
 
             # check if the current page has one of the given stop words
             for word in keywords:
