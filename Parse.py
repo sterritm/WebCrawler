@@ -10,24 +10,24 @@ import urlparse
 from lxml.html.clean import Cleaner
 
 
-#from google.appengine.ext import ndb
-#from google.appengine.ext.webapp import template
-#from google.appengine.api import urlfetch
-#import webapp2
-#import json
-#import os
-#import urllib
-#import random
-#import string
-#from random import randint
+from google.appengine.ext import ndb
+from google.appengine.ext.webapp import template
+from google.appengine.api import urlfetch
+import webapp2
+import json
+import os
+import urllib
+import random
+import string
+from random import randint
 
 
-#class Entry(ndb.Model):
-#    Id = ndb.StringProperty()
-#    URL = ndb.StringProperty()
-#    Position = ndb.FloatProperty
-#    ParentID = ndb.JsonProperty
-#    Keyword = ndb.StringProperty()
+class Entry(ndb.Model):
+    Id = ndb.StringProperty()
+    URL = ndb.StringProperty()
+    Position = ndb.FloatProperty
+    ParentID = ndb.JsonProperty
+    Keyword = ndb.StringProperty()
 
 
 # The web page object- any page available on the world wide web,
@@ -131,17 +131,6 @@ class WebPage(object):
                         priorityQueue.append(each)
                 # add node to the graph
                 graph[sublink.getUrl()] = node
-                
-            ###if we reach the end, then we need to add 
-            #if sublink.position  == NumLevels:
-            #    print 'hi there'
-            #    node = {}
-            #    node['title'] = sublink.getTitle()
-            #    node['found'] = False   #temporary placeholder till words are implemented
-            #    node['edges'] = SublinkChildren.ReturnAllChildrenLinks()
-            #    print node
-            #    # add node to the graph
-            #    graph[sublink.getUrl()] = node
 
             # check if the current page has one of the given stop words
             for word in keywords:
@@ -191,14 +180,14 @@ class Sublink(object):
         self.position = 0 if ancestor is None else ancestor.position + 1
 
         # Create a new Entry for only the inputed link
-        #if self.position == 0:
-        #    newEntry = Entry()
-        #    newEntry.Id = self.id
-        #    newEntry.URL = self.URL
-        #    newEntry.Position = self.position
-        #    newEntry.ParentID = self.ancestor
-        #    newEntry.Keyword = str(keywords).strip('[]')
-        #    newEntry.put()
+        if self.position == 0:
+            newEntry = Entry()
+            newEntry.Id = self.id
+            newEntry.URL = self.URL
+            newEntry.Position = self.position
+            newEntry.ParentID = self.ancestor
+            newEntry.Keyword = str(keywords).strip('[]')
+            newEntry.put()
 
     # returns url for page
     def getUrl(self):
