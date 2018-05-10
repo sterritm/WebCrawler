@@ -1,6 +1,9 @@
 # from the web
 import re
 import hashlib
+import urllib
+
+
 import requests
 # sitePackages.path.append('/path/to/application/app/folder')
 from lxml import html
@@ -8,8 +11,10 @@ from lxml import html
 # from urllib.parse import urljoin
 import urlparse
 from lxml.html.clean import Cleaner
+#from random import randint, random, choice, sample
+import random
 
-
+'''
 from google.appengine.ext import ndb
 from google.appengine.ext.webapp import template
 from google.appengine.api import urlfetch
@@ -19,7 +24,7 @@ import os
 import urllib
 import random
 import string
-from random import randint
+
 
 
 class Entry(ndb.Model):
@@ -27,7 +32,7 @@ class Entry(ndb.Model):
     URL = ndb.StringProperty()
     Position = ndb.FloatProperty
     ParentID = ndb.JsonProperty
-    Keyword = ndb.StringProperty()
+    Keyword = ndb.StringProperty() '''
 
 
 # The web page object- any page available on the world wide web,
@@ -72,10 +77,6 @@ class WebPage(object):
     def ReturnAllChildWebPages(self):
         return [WebPage for WebPage in self.children]
 
-    # helper function to return links of children of a webpage
-    def ReturnAllChildrenLinks(self):
-        return [page.getUrl() for page in self.children]
-
     # Source: https://stackoverflow.com/questions/5319922/python-check-if-word-is-in-a-string
     # find the keyword, ignores the case. So if the keyword is 'also' and the word
     # 'Also' is found in the text, the search will stop.
@@ -88,10 +89,25 @@ class WebPage(object):
     # webpage  is allowed to have.
     def GoSearch(self, SublinkObject, DFSorBFS, NumLevels, keywords=None):
 
-        priorityQueue = [SublinkObject]
-        InQueue = set()
+        #new list
+        listOrURLs = [SublinkObject]
+
+        #new set
+        SetOfURLs = set()
+
         keywordFound = False
-        graph = {}
+        NumberOfChildren = 0
+
+
+        #a = urllib.urlopen(self.URL)
+        #TwoHundred = a.getcode()
+        TwoHundred = requests.head("https://stackoverflow.com")
+        #print(r.status_code)
+        if TwoHundred.status_code == 200:
+            #page = urlopen(self.URL)
+            #t = html.parse(page)
+            t = html.parse(self.link.URL)
+            self.title = t.find(".//title").text
 
         if keywords is None:
             keywords = []
@@ -100,40 +116,53 @@ class WebPage(object):
             return Exception("BFS or DFS not chosen correctly. ")
 
         # while there are still sublinks in the priority queue and the keyword has not been found
-        while priorityQueue and not keywordFound:
+        while listOrURLs and not keywordFound:
 
             # the top of the queue can be popped if it is a depth first search
             # the bottom of the queue (as in a stack) can be popped if it is breadth first search
             if "DFS" == DFSorBFS:
-                sublink = priorityQueue.pop()
+                #random.shuffle(listOrURLs)
+                #listOrURLs.pop(random.randrange(len(listOrURLs.count())))
+                #sublink = listOrURLs.pop(random.choice(listOrURLs))
+
+                #
+                #random_index = randrange((len(listOrURLs) - NumberOfChildren)-1, len(listOrURLs))
+                #sublink = listOrURLs[random_index]
+                #NumberOfChildren = 0
+
+                sublink = listOrURLs.pop()
+
             if DFSorBFS == "BFS":
-                sublink = priorityQueue.pop(0)
+                sublink = listOrURLs.pop(0)
+
 
             # this link has not been seen before
-            if sublink not in InQueue and sublink.legal:
+            if sublink not in SetOfURLs and sublink.legal:
                 # add the sublink to the queue
-                InQueue.add(sublink)
+                SetOfURLs.add(sublink)
 
-            # parse sublink's page and get their children urls
+                # parse sublink's page and get their children urls
             SublinkChildren = WebPage(sublink)
             if sublink.position < NumLevels and SublinkChildren.Code == 200:
-                # create a node to add to graph
-                node = {}
-                node['title'] = sublink.getTitle()
-                node['found'] = False   #temporary placeholder till words are implemented
-                node['edges'] = SublinkChildren.ReturnAllChildrenLinks()
-                # add node to the graph
-                graph[sublink.getUrl()] = node
-                # continue crawling children
+                tempList = []
                 for each in SublinkChildren.ReturnAllChildWebPages():
                     each.position = sublink.position + 1
-                    priorityQueue.append(each)
+                    tempList.append(each)
+
+                #randomly add the children to the ListOfUrls
+                while tempList:
+                    addToListOfURLs = random.choice(tempList)
+                    listOrURLs.append(addToListOfURLs)
+                    tempList.remove(addToListOfURLs)
+                    NumberOfChildren = NumberOfChildren + 1
 
             # check if the current page has one of the given stop words
             for word in keywords:
                 keywordFound = keywordFound or self.findWholeWord(word)(self.Text)
 
-        return graph
+        return SetOfURLs
+
+
 
 
 
@@ -176,27 +205,35 @@ class Sublink(object):
         # set position in regards to the number of ancestors above it
         self.position = 0 if ancestor is None else ancestor.position + 1
 
+        # if self.position == 0:
+        #     #a = urllib.urlopen(self.URL)
+        #     #TwoHundred = a.getcode()
+        #     TwoHundred = requests.head("https://stackoverflow.com")
+        #     #print(r.status_code)
+        #     if TwoHundred.status_code == 200:
+        #         #page = urlopen(self.URL)
+        #         #t = html.parse(page)
+        #         t = html.parse(self.URL)
+        #         self.title = t.find(".//title").text
+
         # Create a new Entry for only the inputed link
-        if self.position == 0:
+        '''if self.position == 0:
             newEntry = Entry()
             newEntry.Id = self.id
             newEntry.URL = self.URL
             newEntry.Position = self.position
             newEntry.ParentID = self.ancestor
             newEntry.Keyword = str(keywords).strip('[]')
-            newEntry.put()
+            newEntry.put()'''
 
-    # returns url for page
-    def getUrl(self):
-        return self.URL
-    
-    # returns title for page, temporary placeholder of empty string
-    def getTitle(self):
-        return 'title' 
     # print the sublink - this is the returned object.
     def __str__(self):
         return "ancestors:%s . legal:%s . id:%s . url: %s " \
                % (self.position, self.legal, self.id, self.URL)
+
+    def ReturnJSON(self):
+        return {"title" : "", "found " : self.legal,}
+
 
 
 # Source: https://stackoverflow.com/questions/3073881/clean-up-html-in-python/6482979
