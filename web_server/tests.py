@@ -21,12 +21,13 @@ GRAPH_VALUES = {'parse1': ROOT_URL + '/parse1',
                 'parse6': ROOT_URL + '/parse6',
                 'parse7': ROOT_URL + '/parse7',
                 'parse8': ROOT_URL + '/parse8',
+                'parse9': ROOT_URL + '/parse9',
                 'graph1': ROOT_URL + '/graph1',
                 'graph2': ROOT_URL + '/graph2',
                 'graph3a': ROOT_URL + '/graph3/a',
                 'graph3b': ROOT_URL + '/graph3/b',
                 'graph4': ROOT_URL + '/graph4',
-                'graph5': ROOT_URL + '/graph5',
+                'graph5': ROOT_URL + '/graph5/a',
                 'graph5b': ROOT_URL + '/graph5/b',
                 'graph6a': ROOT_URL + '/graph6/a',
                 'graph6b': ROOT_URL + '/graph6/b',
@@ -143,6 +144,12 @@ class Parse8Handle(webapp2.RequestHandler):
     def get(self):
         template_values = {'home': ROOT_URL}
         path = os.path.join(os.path.dirname(__file__), 'parse8.html')
+        self.response.write(template.render(path, template_values))
+
+class Parse9Handle(webapp2.RequestHandler):
+    def get(self):
+        template_values = {'page': 'http://thispagedoesnotexist.com'}
+        path = os.path.join(os.path.dirname(__file__), 'parse9.html')
         self.response.write(template.render(path, template_values))
 
 class Graph1Handle(webapp2.RequestHandler):
@@ -306,12 +313,13 @@ app = webapp2.WSGIApplication([
     ('/parse6', Parse6Handle),
     ('/parse7', Parse7Handle),
     ('/parse8', Parse8Handle),
+    ('/parse9', Parse9Handle),
     ('/graph1', Graph1Handle),
     ('/graph2', Graph2Handle),
     ('/graph3/a', Graph3aHandle),
     ('/graph3/b', Graph3bHandle),
     ('/graph4', Graph4Handle),
-    ('/graph5', Graph5Handle),
+    ('/graph5/a', Graph5Handle),
     ('/graph5/b', Graph5bHandle),
     ('/graph6/a', Graph6aHandle),
     ('/graph6/b', Graph6bHandle),
